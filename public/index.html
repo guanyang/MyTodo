@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTodo - Responsive Task Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i data-lucide="check-circle" style="color: var(--primary);"></i>
+                <h2>MyTodo</h2>
+                <button class="menu-trigger mobile-only" onclick="toggleSidebar()" style="margin-left:auto;">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+            
+            <div class="categories">
+                <div class="section-label" data-i18n="categories">Categories</div>
+                <div id="category-list"></div>
+                <div class="add-category-btn" onclick="openAddCategoryModal()">
+                    <i data-lucide="plus-circle" size="16"></i>
+                    <span data-i18n="addCategory">Add Category</span>
+                </div>
+
+                <div class="section-label" data-i18n="archive">Archive</div>
+                <div class="category-item" id="archive-menu-item" onclick="switchCategory('archive')">
+                    <i data-lucide="archive" size="18"></i>
+                    <span data-i18n="archivedTasks">Archived Tasks</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="category-item" onclick="openSettings()">
+                    <i data-lucide="settings" size="18"></i>
+                    <span data-i18n="settings">Settings</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="list-header">
+                <div class="header-left">
+                    <button class="menu-trigger" onclick="toggleSidebar()">
+                        <i data-lucide="menu" size="24"></i>
+                    </button>
+                    <h1 id="current-category-title">All Tasks</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle-btn" onclick="cycleTheme()" id="theme-toggle-btn">
+                        <i id="theme-toggle-icon" data-lucide="monitor" size="18"></i>
+                        <span id="theme-toggle-label" class="theme-label">SYS</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="add-task-container" id="add-task-section">
+                <div class="input-group">
+                    <input type="text" id="new-task-input" placeholder="What needs to be done?" data-i18n-placeholder="todoPlaceholder">
+                </div>
+                <div class="options-group">
+                    <div class="option-item">
+                        <i data-lucide="tag" size="14"></i>
+                        <select id="new-task-category"></select>
+                    </div>
+                    <div class="option-item">
+                        <i data-lucide="calendar" size="14"></i>
+                        <input type="date" id="new-task-deadline">
+                    </div>
+                    <div class="option-item">
+                        <i data-lucide="flag" size="14"></i>
+                        <select id="new-task-priority">
+                            <option value="低" data-i18n="low">Low</option>
+                            <option value="中" data-i18n="medium" selected>Medium</option>
+                            <option value="高" data-i18n="high">High</option>
+                        </select>
+                    </div>
+                    <button id="add-task-btn">
+                        <i data-lucide="plus" size="16"></i>
+                        <span data-i18n="addTask">Add Task</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="todo-list" class="todo-list"></div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 data-i18n="editTask">Edit Task</h2></div>
+            <div class="modal-body">
+                <div class="form-field"><label data-i18n="taskName">Task Name</label><input type="text" id="edit-task-name"></div>
+                <div class="form-field"><label data-i18n="category">Category</label><select id="edit-task-category"></select></div>
+                <div class="form-field"><label data-i18n="deadline">Deadline</label><input type="date" id="edit-task-deadline"></div>
+                <div class="form-field">
+                    <label data-i18n="priority">Priority</label>
+                    <select id="edit-task-priority">
+                        <option value="低" data-i18n="low">Low</option><option value="中" data-i18n="medium">Medium</option><option value="高" data-i18n="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary" id="save-edit-btn" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 data-i18n="settings">Settings</h2></div>
+            <div class="modal-body">
+                <div class="form-field"><label data-i18n="theme">Theme</label><select id="settings-theme" onchange="applyTheme(this.value)"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+                <div class="form-field"><label data-i18n="language">Language</label><select id="settings-lang" onchange="applyLanguage(this.value)"><option value="en">English</option><option value="zh">简体中文</option></select></div>
+                <hr style="border:0; border-top:1px solid var(--border-color); margin:10px 0;">
+                <div class="form-field">
+                    <label data-i18n="dataOps">Data Management</label>
+                    <div class="data-safety-tip">
+                        <i data-lucide="shield-check" size="14"></i>
+                        <span data-i18n="dataSafetyTip">All data is stored locally in your browser. Please export backups regularly to prevent data loss.</span>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:5px;">
+                        <button class="btn-secondary" onclick="exportData()" style="flex:1;"><i data-lucide="download" size="14"></i> <span data-i18n="export">Export</span></button>
+                        <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="flex:1;"><i data-lucide="upload" size="14"></i> <span data-i18n="import">Import</span></button>
+                        <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importData(this)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-primary" onclick="closeSettings()" data-i18n="close">Close</button></div>
+        </div>
+    </div>
+
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 data-i18n="addCategory">Add Category</h2></div>
+            <div class="modal-body">
+                <div class="form-field"><label data-i18n="categoryName">Name</label><input type="text" id="new-category-name"></div>
+                <div class="form-field">
+                    <label data-i18n="categoryIcon">Icon</label>
+                    <select id="new-category-icon"><option value="hash" data-i18n="iconDefault"># (Default)</option><option value="briefcase" data-i18n="iconWork">💼 Work</option><option value="user" data-i18n="iconPersonal">👤 Personal</option><option value="shopping-cart" data-i18n="iconShopping">🛒 Shopping</option><option value="book" data-i18n="iconStudy">📚 Study</option><option value="heart" data-i18n="iconHealth">❤️ Health</option><option value="home" data-i18n="iconHome">🏠 Home</option><option value="plane" data-i18n="iconTravel">✈️ Travel</option><option value="coffee" data-i18n="icon休闲">☕ Cafe</option></select>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-secondary" onclick="closeCategoryModal()" data-i18n="cancel">Cancel</button><button class="btn-primary" onclick="addCategory()" data-i18n="add">Add</button></div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 data-i18n="confirmDeleteTitle">Confirm</h2></div>
+            <div class="modal-body"><p id="confirm-modal-text"></p></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeConfirmModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary btn-danger" id="confirm-delete-btn" data-i18n="delete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
