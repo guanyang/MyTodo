@@ -4,6 +4,31 @@ let categories = [{ name: 'Work', icon: 'briefcase' }, { name: 'Personal', icon:
 let currentEditingId = null;
 let activeCategory = 'all';
 let settings = { theme: 'system', lang: 'en' };
+let touchStartX = 0;
+let currentSwipedItem = null;
+
+function setupSwipeListeners() {
+    const list = document.getElementById('todo-list');
+    list.addEventListener('touchstart', e => {
+        const item = e.target.closest('.todo-item');
+        if (!item || window.innerWidth > 850) return;
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    list.addEventListener('touchend', e => {
+        const item = e.target.closest('.todo-item');
+        if (!item || window.innerWidth > 850) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX - touchEndX;
+        if (diff > 50) { // Swipe Left
+            if (currentSwipedItem && currentSwipedItem !== item) currentSwipedItem.classList.remove('swiped');
+            item.classList.add('swiped'); currentSwipedItem = item;
+        } else if (diff < -50) { // Swipe Right
+            item.classList.remove('swiped');
+            if (currentSwipedItem === item) currentSwipedItem = null;
+        }
+    });
+}
 
 const i18n = {
     zh: {
@@ -53,15 +78,22 @@ function init() {
     switchCategory(activeCategory);
     renderCategories();
     renderTodos();
-    
+
     document.addEventListener('click', (e) => {
         const sidebar = document.getElementById('sidebar');
-        const menuBtn = document.querySelector('.menu-trigger');
-        if (window.innerWidth <= 850 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuBtn.contains(e.target)) {
+        const isTrigger = e.target.closest('.menu-trigger');
+        if (window.innerWidth <= 850 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !isTrigger) {
             sidebar.classList.remove('open');
+        }
+
+        // Close swiped items if clicking elsewhere
+        const swiped = document.querySelector('.todo-item.swiped');
+        if (swiped && !swiped.contains(e.target)) {
+            swiped.classList.remove('swiped');
         }
     });
     document.getElementById('new-task-deadline').value = new Date().toISOString().split('T')[0];
+    setupSwipeListeners();
 }
 
 function applyTheme(theme, save = true) {
@@ -99,7 +131,7 @@ function applyLanguage(lang) {
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key]) el.textContent = i18n[lang][key];
     });
-    
+
     const title = document.getElementById('current-category-title');
     if (activeCategory === 'all') title.textContent = i18n[lang].allTasks;
     else if (activeCategory === 'archive') title.textContent = i18n[lang].archivedTasks;
@@ -146,8 +178,8 @@ function openSimpleAlert(text) {
     document.getElementById('confirm-modal').style.display = 'flex';
 }
 
-function closeConfirmModal() { 
-    document.getElementById('confirm-modal').style.display = 'none'; 
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').style.display = 'none';
     document.getElementById('confirm-delete-btn').style.display = 'block';
 }
 
@@ -164,19 +196,21 @@ function renderTodos() {
     const list = document.getElementById('todo-list');
     const isArchive = activeCategory === 'archive';
     let filtered = isArchive ? todos.filter(t => t.status === '已完成') : (activeCategory === 'all' ? todos.filter(t => t.status === '未完成') : todos.filter(t => t.category === activeCategory && t.status === '未完成'));
-    if (filtered.length === 0) { 
-        list.innerHTML = `<div class="todo-item empty"><i data-lucide="clipboard-list" size="48"></i><p>${isArchive ? i18n[settings.lang].noArchived : i18n[settings.lang].noTasks}</p></div>`; 
-        if (window.lucide) lucide.createIcons(); return; 
+    if (filtered.length === 0) {
+        list.innerHTML = `<div class="todo-item empty"><i data-lucide="clipboard-list" size="48"></i><p>${isArchive ? i18n[settings.lang].noArchived : i18n[settings.lang].noTasks}</p></div>`;
+        if (window.lucide) lucide.createIcons(); return;
     }
     list.innerHTML = filtered.map(todo => `
-        <div class="todo-item ${todo.status === '已完成' ? 'completed' : ''}">
-            <input type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} onchange="handleToggle('${todo.id}', this.checked)">
-            <div class="todo-content" onclick="openEditModal('${todo.id}')">
-                <span class="todo-title">${todo.task}</span>
-                <div class="todo-meta">
-                    <span class="priority-badge priority-${todo.priority}">${todo.priority}</span>
-                    <span class="tag-category">${todo.category}</span>
-                    <span class="deadline-text">${todo.deadline}</span>
+        <div class="todo-item ${todo.status === '已完成' ? 'completed' : ''}" data-id="${todo.id}">
+            <div class="todo-main-view">
+                <input type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} onchange="handleToggle('${todo.id}', this.checked)">
+                <div class="todo-content" onclick="openEditModal('${todo.id}')">
+                    <span class="todo-title">${todo.task}</span>
+                    <div class="todo-meta">
+                        <span class="priority-badge priority-${todo.priority}">${todo.priority}</span>
+                        <span class="tag-category">${todo.category}</span>
+                        <span class="deadline-text">${todo.deadline}</span>
+                    </div>
                 </div>
             </div>
             <button class="delete-btn" onclick="openDeleteTodoConfirm(event, '${todo.id}')"><i data-lucide="trash-2" size="18"></i></button>
@@ -189,6 +223,7 @@ function addTodo() {
     if (!task) return;
     todos.unshift({ id: 'id-' + Date.now(), task, status: '未完成', category: document.getElementById('new-task-category').value, deadline: document.getElementById('new-task-deadline').value, priority: document.getElementById('new-task-priority').value });
     saveData(); renderTodos(); document.getElementById('new-task-input').value = '';
+    closeAddTaskModal();
 }
 
 function handleToggle(id, checked) {
@@ -209,13 +244,14 @@ function openDeleteTodoConfirm(e, id) {
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-function switchCategory(cat) { 
-    activeCategory = cat; renderCategories(); renderTodos(); 
+function switchCategory(cat) {
+    activeCategory = cat; renderCategories(); renderTodos();
     const title = document.getElementById('current-category-title');
     if (cat === 'all') title.textContent = i18n[settings.lang].allTasks;
     else if (cat === 'archive') title.textContent = i18n[settings.lang].archivedTasks;
     else title.textContent = cat;
-    document.getElementById('add-task-section').style.display = cat === 'archive' ? 'none' : 'flex';
+    const fab = document.getElementById('fab-add-btn');
+    if (fab) fab.style.display = cat === 'archive' ? 'none' : 'flex';
     if (window.innerWidth <= 850) document.getElementById('sidebar').classList.remove('open');
 }
 function openAddCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; }
@@ -247,14 +283,24 @@ function importData(input) {
         try {
             const d = JSON.parse(e.target.result);
             if (d.todos) { todos = d.todos; categories = d.categories || categories; saveData(); renderCategories(); renderTodos(); }
-        } catch(err) {}
+        } catch (err) { }
     };
     reader.readAsText(input.files[0]);
 }
 
-document.getElementById('add-task-btn').addEventListener('click', addTodo);
+
+function openAddTaskModal() {
+    document.getElementById('new-task-input').value = '';
+    document.getElementById('new-task-deadline').value = new Date().toISOString().split('T')[0];
+    const catSelect = document.getElementById('new-task-category');
+    if (activeCategory !== 'all' && activeCategory !== 'archive') catSelect.value = activeCategory;
+    document.getElementById('add-task-modal').style.display = 'flex';
+}
+function closeAddTaskModal() { document.getElementById('add-task-modal').style.display = 'none'; }
+
+document.getElementById('add-task-confirm-btn').addEventListener('click', addTodo);
 document.getElementById('new-task-input').addEventListener('keypress', e => { if (e.key === 'Enter') addTodo(); });
-window.onclick = e => { if (e.target.className === 'modal') { closeModal(); closeSettings(); closeCategoryModal(); closeConfirmModal(); } };
+window.onclick = e => { if (e.target.className === 'modal') { closeModal(); closeSettings(); closeCategoryModal(); closeConfirmModal(); closeAddTaskModal(); } };
 
 init();
-window.cycleTheme = cycleTheme; window.applyTheme = applyTheme; window.applyLanguage = applyLanguage; window.switchCategory = switchCategory; window.openAddCategoryModal = openAddCategoryModal; window.closeCategoryModal = closeCategoryModal; window.addCategory = addCategory; window.openDeleteCatConfirm = openDeleteCatConfirm; window.openDeleteTodoConfirm = openDeleteTodoConfirm; window.closeConfirmModal = closeConfirmModal; window.openSettings = openSettings; window.closeSettings = closeSettings; window.handleToggle = handleToggle; window.openEditModal = openEditModal; window.closeModal = closeModal; window.exportData = exportData; window.importData = importData; window.toggleSidebar = toggleSidebar;
+window.cycleTheme = cycleTheme; window.applyTheme = applyTheme; window.applyLanguage = applyLanguage; window.switchCategory = switchCategory; window.openAddCategoryModal = openAddCategoryModal; window.closeCategoryModal = closeCategoryModal; window.addCategory = addCategory; window.openDeleteCatConfirm = openDeleteCatConfirm; window.openDeleteTodoConfirm = openDeleteTodoConfirm; window.closeConfirmModal = closeConfirmModal; window.openSettings = openSettings; window.closeSettings = closeSettings; window.handleToggle = handleToggle; window.openEditModal = openEditModal; window.closeModal = closeModal; window.exportData = exportData; window.importData = importData; window.toggleSidebar = toggleSidebar; window.openAddTaskModal = openAddTaskModal; window.closeAddTaskModal = closeAddTaskModal;
