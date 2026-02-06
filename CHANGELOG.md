@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v1.0.0] - 2026-02-06
 
 ### Added
 - **Cloud Sync**: 

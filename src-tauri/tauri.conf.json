@@ -10,14 +10,16 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "MyTodo - Task Manager",
+        "title": "",
         "width": 1000,
         "height": 700,
         "minWidth": 400,
         "minHeight": 500,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": false
       }
     ],
     "security": {

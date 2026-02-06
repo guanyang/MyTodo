@@ -1,8 +1,58 @@
-# MyTodo
 
-MyTodo 是一款基于 **Tauri** 构建的现代化、极简主义桌面端待办事项应用。它结合了 Web 前端的灵活性与 Rust 后端的高性能，提供原生级的应用体验。
+<h1 align="center">MyTodo ✅</h1>
 
-![App Icon](src-tauri/icons/128x128.png)
+<div align="center">
+  极简、安全、高效的本地优先待办事项管理工具
+</div>
+
+<br />
+
+<div align="center">
+  <img src="src-tauri/icons/128x128.png" width="128" height="128" alt="MyTodo Icon" />
+</div>
+
+<br />
+
+<div align="center">
+  <h3>您的个人高效生产力助手</h3>
+  <p>不仅仅是待办清单，更是掌控生活的极简哲学。</p>
+</div>
+
+<div align="center">
+  <img src="https://img.shields.io/github/v/release/guanyang/MyTodo?style=flat-square&color=blue&label=Version" alt="Version">
+  <img src="https://img.shields.io/badge/Tauri-v2-orange?logo=tauri&style=flat-square" alt="Tauri">
+  <img src="https://img.shields.io/badge/Backend-Rust-red?logo=rust&style=flat-square" alt="Rust">
+  <img src="https://img.shields.io/badge/Frontend-Vanilla_JS-yellow?logo=javascript&style=flat-square" alt="Vanilla JS">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
+</div>
+
+<p align="center">
+  <a href="#-主要功能">核心功能</a> • 
+  <a href="#-安装与运行">安装指南</a> • 
+  <a href="#-技术栈">技术架构</a> • 
+  <a href="#-项目结构">项目结构</a>
+</p>
+
+<p align="center">
+  <b>简体中文</b> | <a href="./README.en.md">English</a>
+</p>
+
+---
+
+**MyTodo** 是一款基于 **Tauri** 构建的现代化桌面端待办事项应用。它摒弃了繁杂的功能堆砌，回归任务管理的本质，结合 **Rust** 的极致性能与现代 Web 设计的灵活性。
+
+通过内置的 **Gist 云同步** 与 **端到端加密** 技术，您可以在享受本地应用极速体验的同时，安全地在多设备间同步数据，且无需担心隐私泄露——
+您的数据完全掌握在自己手中。
+
+<h2 align="center">🎨 界面预览</h2>
+
+<div align="center">
+  <img src="docs/images/main_light.png" width="45%" alt="Light Mode" />
+  <img src="docs/images/main_dark.png" width="45%" alt="Dark Mode" />
+</div>
+<div align="center">
+  <sub>现代化主题展示 (Light / Dark)</sub>
+</div>
 
 ## ✨ 主要功能
 
@@ -61,22 +111,31 @@ MyTodo 是一款基于 **Tauri** 构建的现代化、极简主义桌面端待�
 
 ```
 .
-├── public/                 # 前端资源
-│   ├── index.html          # UI 入口
+├── .github/                # GitHub Actions Workflows
+│   └── workflows/          
+│       └── release.yml     # 自动发布流程配置
+├── public/                 # 前端资源 (Web Assets)
+│   ├── index.html          # 应用入口 HTML
 │   ├── app.js              # 核心业务逻辑 (Vanilla JS)
-│   ├── style.css           # 样式表
-│   └── locales/            # 国际化资源
-├── src-tauri/              # Tauri 后端 (Rust)
-│   ├── src/                # Rust 源码
-│   ├── tauri.conf.json     # Tauri 配置文件
-│   └── icons/              # 应用图标资源
-└── README.md
+│   ├── style.css           # 全局样式表
+│   └── favicon.png         # 网站/应用图标
+├── src-tauri/              # Tauri 后端 (Rust Environment)
+│   ├── src/                # Rust 源代码
+│   │   ├── main.rs         # 入口文件
+│   │   └── lib.rs          # 库文件与插件注册
+│   ├── capabilities/       # 权限控制配置
+│   ├── icons/              # 多平台应用图标资源
+│   ├── tauri.conf.json     # Tauri 项目配置文件
+│   └── Cargo.toml          # Rust 依赖配置
+├── CHANGELOG.md            # 更新日志
+└── README.md               # 项目说明文档
 ```
 
 ## 🛠 技术栈
 
 - **Frontend**: HTML5, Vanilla CSS3, JavaScript (No Framework)
-- **Backend/Shell**: Tauri (Rust), Tauri Plugins (Store, Shell, Dialog, FS)
+- **Backend/Shell**: Tauri v2 (Rust)
+- **Plugins**: Tauri Plugin Store, Shell, Dialog, FS
 - **Iconography**: Lucide Icons
 - **Sync**: GitHub/Gitee REST API
 

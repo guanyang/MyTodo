@@ -462,21 +462,29 @@ function renderTodos() {
         list.innerHTML = `<div class="todo-item empty"><i data-lucide="clipboard-list" size="48"></i><p>${isArchive ? i18n[settings.lang].noArchived : i18n[settings.lang].noTasks}</p></div>`;
         if (window.lucide) lucide.createIcons(); return;
     }
-    list.innerHTML = filtered.map(todo => `
+    list.innerHTML = filtered.map(todo => {
+        // Priority normalization for i18n
+        let pKey = todo.priority;
+        if (pKey === '高') pKey = 'high';
+        else if (pKey === '中') pKey = 'medium';
+        else if (pKey === '低') pKey = 'low';
+
+        return `
         <div class="todo-item ${todo.status === '已完成' ? 'completed' : ''}" data-id="${todo.id}">
             <div class="todo-main-view">
                 <input type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} onchange="handleToggle('${todo.id}', this.checked)">
                 <div class="todo-content" onclick="openEditModal('${todo.id}')">
                     <span class="todo-title">${todo.task}</span>
                     <div class="todo-meta">
-                        <span class="priority-badge priority-${todo.priority}">${todo.priority}</span>
+                        <span class="priority-badge priority-${pKey}">${getText(pKey)}</span>
                         <span class="tag-category">${todo.category}</span>
                         <span class="deadline-text">${formatDeadline(todo.deadline)}</span>
                     </div>
                 </div>
             </div>
             <button class="delete-btn" onclick="openDeleteTodoConfirm(event, '${todo.id}')"><i data-lucide="trash-2" size="18"></i></button>
-        </div>`).join('');
+        </div>`
+    }).join('');
     if (window.lucide) lucide.createIcons();
 }
 
