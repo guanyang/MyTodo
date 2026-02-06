@@ -86,8 +86,13 @@
                         id="edit-task-name"></div>
                 <div class="form-field"><label data-i18n="category">Category</label><select
                         id="edit-task-category"></select></div>
-                <div class="form-field"><label data-i18n="deadline">Deadline</label><input type="date"
-                        id="edit-task-deadline"></div>
+                <div class="form-field">
+                    <label data-i18n="deadline">Deadline</label>
+                    <div class="datetime-input-group">
+                        <input type="date" id="edit-task-date" class="date-input">
+                        <input type="time" id="edit-task-time" class="time-input">
+                    </div>
+                </div>
                 <div class="form-field">
                     <label data-i18n="priority">Priority</label>
                     <select id="edit-task-priority">
@@ -124,11 +129,7 @@
                 <hr style="border:0; border-top:1px solid var(--border-color); margin:10px 0;">
                 <div class="form-field">
                     <label data-i18n="dataOps">Data Management</label>
-                    <div class="data-safety-tip">
-                        <i data-lucide="shield-check" size="14"></i>
-                        <span data-i18n="dataSafetyTip">All data is stored locally in your browser. Please export
-                            backups regularly to prevent data loss.</span>
-                    </div>
+
                     <div style="display:flex; gap:10px; margin-top:5px;">
                         <button class="btn-secondary" onclick="exportData()" style="flex:1;"><i data-lucide="download"
                                 size="14"></i> <span data-i18n="export">Export</span></button>
@@ -139,9 +140,93 @@
                             onchange="importData(this)">
                     </div>
                 </div>
+
+                <!-- Cloud Sync Section -->
+                <div class="form-field">
+                    <label data-i18n="cloudSync">Cloud Sync</label>
+                    <div class="sync-toggle-row">
+                        <span class="sync-toggle-label" data-i18n="enableSync">Enable Gist Sync</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="sync-enabled" onchange="toggleSyncEnabled()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div id="sync-config-preview" class="sync-config-preview" style="display:none;">
+                        <div class="sync-status">
+                            <span class="sync-platform" id="sync-platform-display">GitHub</span>
+                            <span class="sync-time" id="sync-time-display" data-i18n="notSynced">Not synced</span>
+                        </div>
+                        <button class="btn-secondary btn-sm" onclick="openSyncModal()">
+                            <i data-lucide="settings" size="14"></i>
+                            <span data-i18n="syncConfig">Sync Config</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer"><button class="btn-primary" onclick="closeSettings()"
                     data-i18n="close">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Sync Config Modal -->
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="syncConfigTitle">Sync Config</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label data-i18n="syncType">Type</label>
+                    <select id="sync-type">
+                        <option value="github">GitHub</option>
+                        <option value="gitee">Gitee</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label data-i18n="syncToken">Token</label>
+                    <div class="input-with-action">
+                        <input type="password" id="sync-token" placeholder="ghp_xxxx or gitee token">
+                        <button class="btn-icon" onclick="toggleTokenVisibility()">
+                            <i id="token-visibility-icon" data-lucide="eye" size="18"></i>
+                        </button>
+                    </div>
+                    <small class="form-hint" data-i18n="tokenHint">Personal access token with gist permissions</small>
+                </div>
+                <div class="form-field">
+                    <label data-i18n="syncGistId">Gist ID</label>
+                    <input type="text" id="sync-gist-id" placeholder="Leave empty to create new">
+                    <small class="form-hint" data-i18n="gistIdHint">Existing Gist ID or leave empty to
+                        auto-create</small>
+                </div>
+                <div class="form-field">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="sync-encrypt" checked>
+                        <label for="sync-encrypt" data-i18n="encryptData">Encrypt data with token</label>
+                    </div>
+                </div>
+
+                <div class="sync-actions">
+                    <button class="btn-sync btn-upload" onclick="uploadToGist()">
+                        <i data-lucide="upload-cloud" size="18"></i>
+                        <span data-i18n="uploadConfig">Upload</span>
+                    </button>
+                    <button class="btn-sync btn-download" onclick="downloadFromGist()">
+                        <i data-lucide="download-cloud" size="18"></i>
+                        <span data-i18n="downloadConfig">Download</span>
+                    </button>
+                </div>
+
+                <div id="sync-status-message" class="sync-status-message" style="display:none;"></div>
+
+                <div class="sync-last-time">
+                    <span data-i18n="lastSyncTime">Last sync time:</span>
+                    <span id="last-sync-time">--</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeSyncModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary" onclick="saveSyncConfig()" data-i18n="save">Save</button>
+            </div>
         </div>
     </div>
 
@@ -191,7 +276,10 @@
                 </div>
                 <div class="form-field">
                     <label data-i18n="deadline">Deadline</label>
-                    <input type="date" id="new-task-deadline">
+                    <div class="datetime-input-group">
+                        <input type="date" id="new-task-date" class="date-input">
+                        <input type="time" id="new-task-time" class="time-input">
+                    </div>
                 </div>
                 <div class="form-field">
                     <label data-i18n="priority">Priority</label>
@@ -224,6 +312,29 @@
         </div>
     </div>
 
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="alert-title" data-i18n="info">Info</h2>
+            <p id="alert-message" style="margin: 20px 0; font-size: 16px;"></p>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeAlertModal()" data-i18n="close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirm Modal -->
+    <div id="generic-confirm-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="generic-confirm-title" data-i18n="confirm">Confirm</h2>
+            <p id="generic-confirm-message" style="margin: 20px 0; font-size: 16px;"></p>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGenericConfirmModal()"
+                    data-i18n="cancel">Cancel</button>
+                <button class="btn btn-primary" id="generic-confirm-btn" data-i18n="ok">OK</button>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 

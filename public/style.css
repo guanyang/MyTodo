@@ -485,10 +485,6 @@ body {
         z-index: 1;
         opacity: 1;
     }
-
-    .todo-item {
-        /* Mobile specific adjustments if needed */
-    }
 }
 
 /* Modals - HIGH END REFINEMENT */
@@ -572,6 +568,45 @@ body {
     background: var(--main-bg);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
+}
+
+/* DateTime Input Group */
+.datetime-input-group {
+    display: flex;
+    gap: 12px;
+}
+
+.datetime-input-group .date-input {
+    flex: 1.2;
+    padding: 14px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.datetime-input-group .time-input {
+    flex: 0.8;
+    padding: 14px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.datetime-input-group input:focus {
+    border-color: var(--primary);
+    background: var(--main-bg);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+.datetime-input-group input:hover {
+    border-color: var(--primary-light);
 }
 
 .modal-footer {
@@ -748,4 +783,404 @@ body {
         width: 56px;
         height: 56px;
     }
+}
+
+/* ========== Custom Select Dropdown Styles ========== */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+select:hover {
+    border-color: var(--primary-light);
+}
+
+select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Form field selects */
+.form-field select {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    color: var(--text-main);
+    font-size: 16px;
+    font-weight: 500;
+    padding: 14px 40px 14px 18px !important;
+}
+
+.form-field select:hover {
+    background-color: var(--main-bg);
+    border-color: var(--primary-light);
+}
+
+.form-field select:focus {
+    background-color: var(--main-bg);
+    border-color: var(--primary);
+}
+
+/* Option item selects (in add task container) */
+.option-item select {
+    background-color: transparent;
+    border: none;
+    padding: 0 24px 0 0 !important;
+    background-position: right 0 center;
+    font-weight: 500;
+}
+
+.option-item select:hover,
+.option-item select:focus {
+    border: none;
+    box-shadow: none;
+}
+
+/* Select options styling (limited browser support) */
+select option {
+    padding: 12px 16px;
+    background: var(--main-bg);
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+    background: var(--primary);
+    color: white;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] .form-field select {
+    background-color: var(--bg-color);
+}
+
+[data-theme="dark"] .form-field select:hover,
+[data-theme="dark"] .form-field select:focus {
+    background-color: var(--main-bg);
+}
+
+/* Settings modal radio-style select buttons */
+.settings-option-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.settings-option-btn {
+    padding: 10px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-option-btn:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.settings-option-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Icon select with preview */
+.icon-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.icon-select-wrapper .icon-preview {
+    position: absolute;
+    left: 14px;
+    pointer-events: none;
+    color: var(--text-secondary);
+}
+
+.icon-select-wrapper select {
+    padding-left: 42px !important;
+}
+
+/* ========== Cloud Sync Styles ========== */
+
+/* Toggle Switch */
+.sync-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.sync-toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    border-radius: 26px;
+    transition: all 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked+.toggle-slider {
+    background-color: var(--primary);
+}
+
+.toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(22px);
+}
+
+/* Sync Config Preview */
+.sync-config-preview {
+    padding: 16px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sync-status {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sync-platform {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.sync-time {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.btn-sm {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+}
+
+/* Input with Action Button */
+.input-with-action {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-with-action input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 16px;
+    transition: all 0.2s;
+}
+
+.input-with-action input:focus {
+    border-color: var(--primary);
+    background: var(--main-bg);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+.btn-icon {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--main-bg);
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    display: block;
+}
+
+/* Checkbox Row */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+}
+
+.checkbox-row input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.checkbox-row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+/* Sync Actions */
+.sync-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-sync {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-upload {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-upload:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-download {
+    background: transparent;
+    border: 2px solid var(--warning);
+    color: var(--warning);
+}
+
+.btn-download:hover {
+    background: var(--warning);
+    color: white;
+}
+
+/* Sync Status Message */
+.sync-status-message {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sync-status-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: var(--success);
+}
+
+.sync-status-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.sync-status-message.loading {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: var(--primary);
+}
+
+/* Last Sync Time */
+.sync-last-time {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 6px;
+}
+
+.sync-last-time span:last-child {
+    color: var(--text-main);
+    font-weight: 500;
 }
