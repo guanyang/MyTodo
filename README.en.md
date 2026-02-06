@@ -79,6 +79,15 @@ With built-in **Gist Cloud Sync** and **End-to-End Encryption**, you can enjoy t
 ### Download
 Please visit the [Releases Page](https://github.com/guanyang/MyTodo/releases) to download the latest installer for macOS (.dmg) or Windows (.exe).
 
+> **⚠️ macOS says "App is damaged"?**
+> 
+> Since this project is not signed with an official Apple Developer Certificate, macOS Gatekeeper may block it.
+> Please run the following command to fix it:
+> ```bash
+> sudo xattr -d com.apple.quarantine /Applications/MyTodo.app
+> ```
+> Or go to "System Settings" -> "Privacy & Security" and click "Open Anyway".
+
 ### 💻 Local Development
 
 If you are a developer, follow these steps to run the project:

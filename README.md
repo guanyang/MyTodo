@@ -81,6 +81,14 @@
 ### 下载安装包
 请前往 [Releases页面](https://github.com/guanyang/MyTodo/releases) 下载适用于 macOS (.dmg) 或 Windows (.exe) 的最新安装包。
 
+> **⚠️ macOS 提示“应用已损坏”？**
+> 
+> 由于本项目没有购买 Apple 开发者证书进行签名，macOS 可能会阻止应用运行。请执行以下命令修复：
+> ```bash
+> sudo xattr -d com.apple.quarantine /Applications/MyTodo.app
+> ```
+> 或者在“系统设置” -> “隐私与安全性”中点击“仍要打开”。
+
 ### 💻 本地开发
 
 如果你是开发者，可以按照以下步骤运行项目：
