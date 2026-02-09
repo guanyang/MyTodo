@@ -41,3 +41,4 @@ All notable changes to this project will be documented in this file.
   - Fixed "OK" button responsiveness in dialogs.
   - Fixed macOS icon scaling.
   - Resolved layout overlap between Deadline and Reminder fields in modals.
+  - **Build**: Fixed Linux CI build failure due to AppImage download error (502 Gateway).
