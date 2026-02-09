@@ -2,35 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v1.0.0] - 2026-02-06
+## [v1.0.0] - 2026-02-09
 
 ### Added
+- **Smart Reminders**: 
+  - Cross-platform system notifications (Web + Native) ensuring you never miss a task.
+  - Flexible scheduling options: "At event time", "5 mins before", "1 hour before", etc.
+  - Intelligent permission request handling for seamless user experience.
+- **Input Enhancements**: 
+  - Added multi-line **Description** field (max 300 chars).
+  - Real-time character counting and limits for Task Name (50), Category (20), and Description.
 - **Cloud Sync**: 
-  - Integrated GitHub and Gitee Gist synchronization.
-  - Implemented end-to-end encryption (XOR + Base64) to secure user data and tokens.
-  - Added "Sync Settings" modal for configuring provider, token, and encryption preferences.
+  - Integrated GitHub and Gitee Gist synchronization with end-to-end encryption.
 - **Interaction**: 
-  - Implemented swipe-to-delete gesture support for touch devices and trackpads.
-  - Added generic custom modal dialogs (`showAlert`, `showConfirm`) for a unified UI experience.
+  - Implemented swipe-to-delete gesture support.
+  - Added generic custom modal dialogs (`showAlert`, `showConfirm`).
 - **CI/CD**: 
-  - Added `.github/workflows/release.yml` for automated multi-platform builds (macOS, Windows, Ubuntu) on release publication.
+  - Added automated release workflow for multi-platform builds.
 
 ### Changed
 - **UI/UX**: 
-  - Replaced system native `alert` and `confirm` dialogs with custom styled modals.
-  - Simplified Sync Settings UI by removing the redundant "View Gist" button.
-  - Removed "Data Management" safety tip from Settings for a cleaner look.
+  - **Compact Modals**: Redesigned Add/Edit Task dialogs with a grid layout to maximize space efficiency.
+  - Replaced native alerts with custom styled modals.
+  - Simplified Sync Settings UI.
 - **Assets**: 
-  - Updated application icons to properly support macOS Dock styling (transparent rounded corners and full-size canvas).
-  - Updated `favicon.png` to match the new app icon identity.
+  - Updated application icons for proper macOS Dock styling.
 - **Documentation**: 
-  - Rewrote `README.md` to reflect the transition to a Tauri-based desktop application architecture.
+  - Updated README to reflect Tauri architecture and new features.
 
 ### Fixed
+- **Interaction**:
+  - Fixed sidebar menu toggle issue on mobile devices/small screens.
+  - Fixed notification permission "default" state stuck issue on Web.
 - **Sync**: 
-  - Fixed `InvalidCharacterError` when encrypting non-Latin characters (UTF-8 support).
-  - Fixed Gitee download failure caused by missing `filename` property in API response.
-  - Fixed `syncConfig is not defined` error during initialization.
+  - Fixed UTF-8 encryption errors.
+  - Fixed Gitee download failures.
 - **UI**: 
-  - Fixed issue where "OK" button in confirmation dialogs would sometimes be unresponsive due to DOM loading order.
-  - Fixed macOS application icon appearing too small in the Dock.
+  - Fixed "OK" button responsiveness in dialogs.
+  - Fixed macOS icon scaling.
+  - Resolved layout overlap between Deadline and Reminder fields in modals.

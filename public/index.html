@@ -13,6 +13,9 @@
         href="https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        // Production error handling (silent or logging)
+    </script>
 </head>
 
 <body>
@@ -30,7 +33,7 @@
             <div class="categories">
                 <div class="section-label" data-i18n="categories">Categories</div>
                 <div id="category-list"></div>
-                <div class="add-category-btn" onclick="openAddCategoryModal()">
+                <div id="btn-add-category" class="add-category-btn">
                     <i data-lucide="plus-circle" size="16"></i>
                     <span data-i18n="addCategory">Add Category</span>
                 </div>
@@ -43,7 +46,7 @@
             </div>
 
             <div class="sidebar-footer">
-                <div class="category-item" onclick="openSettings()">
+                <div id="btn-settings" class="category-item">
                     <i data-lucide="settings" size="18"></i>
                     <span data-i18n="settings">Settings</span>
                 </div>
@@ -54,13 +57,13 @@
         <main class="main-content">
             <header class="list-header">
                 <div class="header-left">
-                    <button class="menu-trigger" onclick="toggleSidebar()">
+                    <button class="menu-trigger">
                         <i data-lucide="menu" size="24"></i>
                     </button>
                     <h1 id="current-category-title">All Tasks</h1>
                 </div>
                 <div class="header-actions">
-                    <button class="theme-toggle-btn" onclick="cycleTheme()" id="theme-toggle-btn">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn">
                         <i id="theme-toggle-icon" data-lucide="monitor" size="18"></i>
                         <span id="theme-toggle-label" class="theme-label">SYS</span>
                     </button>
@@ -69,7 +72,7 @@
 
             <div id="todo-list" class="todo-list"></div>
 
-            <button id="fab-add-btn" class="fab-btn" onclick="openAddTaskModal()">
+            <button id="fab-add-btn" class="fab-btn">
                 <i data-lucide="plus"></i>
             </button>
         </main>
@@ -83,27 +86,51 @@
             </div>
             <div class="modal-body">
                 <div class="form-field"><label data-i18n="taskName">Task Name</label><input type="text"
-                        id="edit-task-name"></div>
-                <div class="form-field"><label data-i18n="category">Category</label><select
-                        id="edit-task-category"></select></div>
-                <div class="form-field">
-                    <label data-i18n="deadline">Deadline</label>
-                    <div class="datetime-input-group">
-                        <input type="date" id="edit-task-date" class="date-input">
-                        <input type="time" id="edit-task-time" class="time-input">
+                        id="edit-task-name" maxlength="50">
+                    <div class="char-count"><span id="edit-task-name-count">0</span>/50</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label data-i18n="category">Category</label><select
+                            id="edit-task-category"></select></div>
+                    <div class="form-field">
+                        <label data-i18n="priority">Priority</label>
+                        <select id="edit-task-priority">
+                            <option value="low" data-i18n="low">Low</option>
+                            <option value="medium" data-i18n="medium">Medium</option>
+                            <option value="high" data-i18n="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field" style="flex:2.2;">
+                        <label data-i18n="deadline">Deadline</label>
+                        <div class="datetime-input-group">
+                            <input type="date" id="edit-task-date" class="date-input">
+                            <input type="time" id="edit-task-time" class="time-input">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label data-i18n="reminder">Reminder</label>
+                        <select id="edit-task-reminder">
+                            <option value="-1" data-i18n="noReminder" selected>None</option>
+                            <option value="0" data-i18n="remind0">At event time</option>
+                            <option value="5" data-i18n="remind5m">5 min before</option>
+                            <option value="15" data-i18n="remind15m">15 min before</option>
+                            <option value="30" data-i18n="remind30m">30 min before</option>
+                            <option value="60" data-i18n="remind1h">1 hour before</option>
+                            <option value="1440" data-i18n="remind1d">1 day before</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-field">
-                    <label data-i18n="priority">Priority</label>
-                    <select id="edit-task-priority">
-                        <option value="low" data-i18n="low">Low</option>
-                        <option value="medium" data-i18n="medium">Medium</option>
-                        <option value="high" data-i18n="high">High</option>
-                    </select>
+                    <label data-i18n="description">Description</label>
+                    <textarea id="edit-task-desc" rows="3" maxlength="300"
+                        data-i18n-placeholder="descriptionPlaceholder" class="desc-textarea"></textarea>
+                    <div class="char-count"><span id="edit-task-desc-count">0</span>/300</div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-secondary" id="btn-edit-cancel" data-i18n="cancel">Cancel</button>
                 <button class="btn-primary" id="save-edit-btn" data-i18n="save">Save</button>
             </div>
         </div>
@@ -115,14 +142,12 @@
                 <h2 data-i18n="settings">Settings</h2>
             </div>
             <div class="modal-body">
-                <div class="form-field"><label data-i18n="theme">Theme</label><select id="settings-theme"
-                        onchange="applyTheme(this.value)">
+                <div class="form-field"><label data-i18n="theme">Theme</label><select id="settings-theme">
                         <option value="system">System</option>
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
                     </select></div>
-                <div class="form-field"><label data-i18n="language">Language</label><select id="settings-lang"
-                        onchange="applyLanguage(this.value)">
+                <div class="form-field"><label data-i18n="language">Language</label><select id="settings-lang">
                         <option value="en">English</option>
                         <option value="zh">简体中文</option>
                     </select></div>
@@ -131,13 +156,11 @@
                     <label data-i18n="dataOps">Data Management</label>
 
                     <div style="display:flex; gap:10px; margin-top:5px;">
-                        <button class="btn-secondary" onclick="exportData()" style="flex:1;"><i data-lucide="download"
+                        <button class="btn-secondary" id="btn-export-data" style="flex:1;"><i data-lucide="download"
                                 size="14"></i> <span data-i18n="export">Export</span></button>
-                        <button class="btn-secondary" onclick="document.getElementById('import-file').click()"
-                            style="flex:1;"><i data-lucide="upload" size="14"></i> <span
-                                data-i18n="import">Import</span></button>
-                        <input type="file" id="import-file" style="display:none;" accept=".json"
-                            onchange="importData(this)">
+                        <button class="btn-secondary" id="btn-import-trigger" style="flex:1;"><i data-lucide="upload"
+                                size="14"></i> <span data-i18n="import">Import</span></button>
+                        <input type="file" id="import-file" style="display:none;" accept=".json">
                     </div>
                 </div>
 
@@ -147,7 +170,7 @@
                     <div class="sync-toggle-row">
                         <span class="sync-toggle-label" data-i18n="enableSync">Enable Gist Sync</span>
                         <label class="toggle-switch">
-                            <input type="checkbox" id="sync-enabled" onchange="toggleSyncEnabled()">
+                            <input type="checkbox" id="sync-enabled">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -156,14 +179,14 @@
                             <span class="sync-platform" id="sync-platform-display">GitHub</span>
                             <span class="sync-time" id="sync-time-display" data-i18n="notSynced">Not synced</span>
                         </div>
-                        <button class="btn-secondary btn-sm" onclick="openSyncModal()">
+                        <button class="btn-secondary btn-sm" id="btn-open-sync">
                             <i data-lucide="settings" size="14"></i>
                             <span data-i18n="syncConfig">Sync Config</span>
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer"><button class="btn-primary" onclick="closeSettings()"
+            <div class="modal-footer"><button class="btn-primary" id="btn-settings-close"
                     data-i18n="close">Close</button></div>
         </div>
     </div>
@@ -186,7 +209,7 @@
                     <label data-i18n="syncToken">Token</label>
                     <div class="input-with-action">
                         <input type="password" id="sync-token" placeholder="ghp_xxxx or gitee token">
-                        <button class="btn-icon" onclick="toggleTokenVisibility()">
+                        <button class="btn-icon" id="btn-toggle-token">
                             <i id="token-visibility-icon" data-lucide="eye" size="18"></i>
                         </button>
                     </div>
@@ -206,11 +229,11 @@
                 </div>
 
                 <div class="sync-actions">
-                    <button class="btn-sync btn-upload" onclick="uploadToGist()">
+                    <button class="btn-sync btn-upload" id="btn-sync-upload">
                         <i data-lucide="upload-cloud" size="18"></i>
                         <span data-i18n="uploadConfig">Upload</span>
                     </button>
-                    <button class="btn-sync btn-download" onclick="downloadFromGist()">
+                    <button class="btn-sync btn-download" id="btn-sync-download">
                         <i data-lucide="download-cloud" size="18"></i>
                         <span data-i18n="downloadConfig">Download</span>
                     </button>
@@ -224,8 +247,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeSyncModal()" data-i18n="cancel">Cancel</button>
-                <button class="btn-primary" onclick="saveSyncConfig()" data-i18n="save">Save</button>
+                <button class="btn-secondary" id="btn-sync-cancel" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary" id="btn-sync-save" data-i18n="save">Save</button>
             </div>
         </div>
     </div>
@@ -237,7 +260,9 @@
             </div>
             <div class="modal-body">
                 <div class="form-field"><label data-i18n="categoryName">Name</label><input type="text"
-                        id="new-category-name"></div>
+                        id="new-category-name" maxlength="20">
+                    <div class="char-count"><span id="new-category-name-count">0</span>/20</div>
+                </div>
                 <div class="form-field">
                     <label data-i18n="categoryIcon">Icon</label>
                     <select id="new-category-icon">
@@ -253,8 +278,8 @@
                     </select>
                 </div>
             </div>
-            <div class="modal-footer"><button class="btn-secondary" onclick="closeCategoryModal()"
-                    data-i18n="cancel">Cancel</button><button class="btn-primary" onclick="addCategory()"
+            <div class="modal-footer"><button class="btn-secondary" id="btn-cat-cancel"
+                    data-i18n="cancel">Cancel</button><button class="btn-primary" id="btn-cat-add"
                     data-i18n="add">Add</button></div>
         </div>
     </div>
@@ -268,30 +293,51 @@
                 <div class="form-field">
                     <label data-i18n="taskName">Task Name</label>
                     <input type="text" id="new-task-input" placeholder="What needs to be done?"
-                        data-i18n-placeholder="todoPlaceholder">
+                        data-i18n-placeholder="todoPlaceholder" maxlength="50">
+                    <div class="char-count"><span id="new-task-name-count">0</span>/50</div>
                 </div>
-                <div class="form-field">
-                    <label data-i18n="category">Category</label>
-                    <select id="new-task-category"></select>
+                <div class="form-row">
+                    <div class="form-field"><label data-i18n="category">Category</label><select
+                            id="new-task-category"></select></div>
+                    <div class="form-field">
+                        <label data-i18n="priority">Priority</label>
+                        <select id="new-task-priority">
+                            <option value="low" data-i18n="low">Low</option>
+                            <option value="medium" data-i18n="medium" selected>Medium</option>
+                            <option value="high" data-i18n="high">High</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label data-i18n="deadline">Deadline</label>
-                    <div class="datetime-input-group">
-                        <input type="date" id="new-task-date" class="date-input">
-                        <input type="time" id="new-task-time" class="time-input">
+                <div class="form-row">
+                    <div class="form-field" style="flex:2.2;">
+                        <label data-i18n="deadline">Deadline</label>
+                        <div class="datetime-input-group">
+                            <input type="date" id="new-task-date" class="date-input">
+                            <input type="time" id="new-task-time" class="time-input">
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label data-i18n="reminder">Reminder</label>
+                        <select id="new-task-reminder">
+                            <option value="-1" data-i18n="noReminder" selected>None</option>
+                            <option value="0" data-i18n="remind0">At event time</option>
+                            <option value="5" data-i18n="remind5m">5 min before</option>
+                            <option value="15" data-i18n="remind15m">15 min before</option>
+                            <option value="30" data-i18n="remind30m">30 min before</option>
+                            <option value="60" data-i18n="remind1h">1 hour before</option>
+                            <option value="1440" data-i18n="remind1d">1 day before</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-field">
-                    <label data-i18n="priority">Priority</label>
-                    <select id="new-task-priority">
-                        <option value="low" data-i18n="low">Low</option>
-                        <option value="medium" data-i18n="medium" selected>Medium</option>
-                        <option value="high" data-i18n="high">High</option>
-                    </select>
+                    <label data-i18n="description">Description</label>
+                    <textarea id="new-task-desc" rows="3" maxlength="300" data-i18n-placeholder="descriptionPlaceholder"
+                        class="desc-textarea"></textarea>
+                    <div class="char-count"><span id="new-task-desc-count">0</span>/300</div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeAddTaskModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-secondary" id="btn-add-task-cancel" data-i18n="cancel">Cancel</button>
                 <button class="btn-primary" id="add-task-confirm-btn" data-i18n="add">Add</button>
             </div>
         </div>
@@ -306,7 +352,7 @@
                 <p id="confirm-modal-text"></p>
             </div>
             <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeConfirmModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-secondary" id="btn-confirm-cancel" data-i18n="cancel">Cancel</button>
                 <button class="btn-primary btn-danger" id="confirm-delete-btn" data-i18n="delete">Delete</button>
             </div>
         </div>
@@ -318,7 +364,7 @@
             <h2 id="alert-title" data-i18n="info">Info</h2>
             <p id="alert-message" style="margin: 20px 0; font-size: 16px;"></p>
             <div class="modal-footer">
-                <button class="btn btn-primary" onclick="closeAlertModal()" data-i18n="close">Close</button>
+                <button class="btn btn-primary" id="btn-alert-close" data-i18n="close">Close</button>
             </div>
         </div>
     </div>
@@ -329,8 +375,7 @@
             <h2 id="generic-confirm-title" data-i18n="confirm">Confirm</h2>
             <p id="generic-confirm-message" style="margin: 20px 0; font-size: 16px;"></p>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeGenericConfirmModal()"
-                    data-i18n="cancel">Cancel</button>
+                <button class="btn btn-secondary" id="btn-generic-cancel" data-i18n="cancel">Cancel</button>
                 <button class="btn btn-primary" id="generic-confirm-btn" data-i18n="ok">OK</button>
             </div>
         </div>

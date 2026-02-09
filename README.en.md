@@ -60,6 +60,10 @@ With built-in **Gist Cloud Sync** and **End-to-End Encryption**, you can enjoy t
 - **Archiving**: One-click archiving of completed tasks to keep your daily list clean.
 - **Interactive Experience**: Offers mobile-style **slide-to-delete** functionality and desktop-optimized hover actions.
 
+### ⏰ Smart Reminders & Interaction
+- **Cross-Platform Notifications**: Supports system-level notifications on both Web and Native (macOS/Windows) platforms.
+- **Flexible Scheduling**: Set reminders for "At event time", "5 mins before", "1 hour before", etc.
+
 ### ☁️ Cloud Sync (Gist Sync)
 - **Multi-Device Sync**: Sync data across devices via **GitHub Gist** or **Gitee Gist**.
 - **Privacy First**: Built-in **End-to-End Encryption** (AES-like XOR + Base64) ensures your tokens and data are stored as ciphertext in the cloud.

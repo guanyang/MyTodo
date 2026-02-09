@@ -119,7 +119,8 @@ function checkTauriEnvironment() {
 // Check if Tauri Store plugin is available
 function checkTauriStore() {
     try {
-        return window.__TAURI__ && window.__TAURI__.store && typeof window.__TAURI__.store.load === 'function';
+        return window.__TAURI__ && window.__TAURI__.store &&
+            (typeof window.__TAURI__.store.load === 'function' || typeof window.__TAURI__.store.Store === 'function');
     } catch (e) {
         return false;
     }
@@ -133,8 +134,15 @@ async function initTauriStore() {
     }
 
     try {
-        const { load } = window.__TAURI__.store;
-        store = await load(STORE_FILE, { autoSave: true });
+        const { load, Store } = window.__TAURI__.store;
+        if (typeof load === 'function') {
+            store = await load(STORE_FILE, { autoSave: true });
+        } else if (typeof Store === 'function') {
+            store = new Store(STORE_FILE);
+            await store.load(); // Ensure load
+        } else {
+            throw new Error('Tauri Store API not compatible');
+        }
         isNativeApp = true;
         console.log('Tauri Store initialized - Native App Mode');
 
@@ -280,7 +288,11 @@ const i18n = {
         encryptData: "使用 Token 加密数据", uploadConfig: "上传配置/数据", downloadConfig: "下载配置/数据",
         lastSyncTime: "上次同步时间：", notSynced: "未同步", syncSuccess: "同步成功！", syncFailed: "同步失败：",
         syncing: "同步中...", decryptFailed: "解密失败，Token 可能不匹配",
-        confirmOverwriteLocal: "云端数据更新，是否覆盖本地数据？", confirmOverwriteCloud: "确定要覆盖云端数据吗？"
+        confirmOverwriteLocal: "云端数据更新，是否覆盖本地数据？", confirmOverwriteCloud: "确定要覆盖云端数据吗？",
+        // New Features
+        description: "任务描述", descriptionPlaceholder: "添加详细描述（最多300字）...",
+        reminder: "到期提醒", noReminder: "无提醒",
+        remind0: "任务截止时", remind5m: "提前 5 分钟", remind15m: "提前 15 分钟", remind30m: "提前 30 分钟", remind1h: "提前 1 小时", remind1d: "提前 1 天"
     },
     en: {
         allTasks: "All Tasks", categories: "Categories", addCategory: "Add Category", categoryName: "Name", categoryIcon: "Icon", settings: "Settings",
@@ -302,11 +314,17 @@ const i18n = {
         encryptData: "Encrypt data with Token", uploadConfig: "Upload Config/Data", downloadConfig: "Download Config/Data",
         lastSyncTime: "Last Sync:", notSynced: "Not synced", syncSuccess: "Sync Successful!", syncFailed: "Sync Failed:",
         syncing: "Syncing...", decryptFailed: "Decrypt failed, Token mismatch",
-        confirmOverwriteLocal: "Cloud data is newer, overwrite local data?", confirmOverwriteCloud: "Overwrite cloud data with local data?"
+        confirmOverwriteLocal: "Cloud data is newer, overwrite local data?", confirmOverwriteCloud: "Overwrite cloud data with local data?",
+        // New Features
+        description: "Description", descriptionPlaceholder: "Add details (max 300 chars)...",
+        reminder: "Reminder", noReminder: "None",
+        remind0: "At event time", remind5m: "5 min before", remind15m: "15 min before", remind30m: "30 min before", remind1h: "1 hour before", remind1d: "1 day before"
     }
 };
 
 function init() {
+    setupCharCountListeners();
+    startReminderService();
     // For Web/H5: Load from LocalStorage immediately
     // For Native Apps: Load from LocalStorage first (for fast initial render), 
     // then Tauri Store will override when ready
@@ -354,7 +372,15 @@ function init() {
             }
         }).catch(e => {
             console.warn('Tauri Store init failed, using LocalStorage:', e);
+            alert('Tauri Store Init Failed:\n' + e.message + '\nFalling back to LocalStorage.');
+
+            // Fallback initialization
             isNativeApp = false;
+            loadDataFromLocalStorage();
+            applyTheme(settings.theme);
+            applyLanguage(settings.lang);
+            renderCategories();
+            renderTodos();
         });
     } else {
         console.log('Storage mode: LocalStorage (Web/H5)');
@@ -405,11 +431,32 @@ function applyLanguage(lang) {
 
 function renderCategories() {
     const list = document.getElementById('category-list');
-    let html = `<div class="category-item ${activeCategory === 'all' ? 'active' : ''}" onclick="switchCategory('all')"><i data-lucide="layout-grid" size="18"></i><span>${i18n[settings.lang].allTasks}</span></div>`;
+    let html = `<div class="category-item ${activeCategory === 'all' ? 'active' : ''}" data-category="all"><i data-lucide="layout-grid" size="18"></i><span>${i18n[settings.lang].allTasks}</span></div>`;
     categories.forEach(cat => {
-        html += `<div class="category-item ${activeCategory === cat.name ? 'active' : ''}" onclick="switchCategory('${cat.name}')"><i data-lucide="${cat.icon || 'hash'}" size="18"></i><span>${cat.name}</span><button class="cat-delete-btn" onclick="openDeleteCatConfirm(event, '${cat.name}')"><i data-lucide="trash-2" size="14"></i></button></div>`;
+        html += `<div class="category-item ${activeCategory === cat.name ? 'active' : ''}" data-category="${cat.name}"><i data-lucide="${cat.icon || 'hash'}" size="18"></i><span>${cat.name}</span><button class="cat-delete-btn" data-category="${cat.name}"><i data-lucide="trash-2" size="14"></i></button></div>`;
     });
     list.innerHTML = html;
+
+    // Manually attach listeners
+    list.querySelectorAll('.category-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.cat-delete-btn')) return;
+            const cat = item.dataset.category;
+            if (cat) switchCategory(cat);
+        });
+    });
+
+    list.querySelectorAll('.cat-delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const cat = btn.dataset.category;
+            if (cat) {
+                // Ensure openDeleteCatConfirm is defined and reachable
+                try { openDeleteCatConfirm(e, cat); } catch (err) { alert('Delete Error: ' + err.message); }
+            }
+        });
+    });
+
     const archiveItem = document.getElementById('archive-menu-item');
     if (activeCategory === 'archive') archiveItem.classList.add('active');
     else archiveItem.classList.remove('active');
@@ -446,11 +493,18 @@ function closeConfirmModal() {
 }
 
 function addCategory() {
-    const name = document.getElementById('new-category-name').value.trim();
+    const nameVal = document.getElementById('new-category-name').value.trim();
     const icon = document.getElementById('new-category-icon').value;
-    if (name && !categories.find(c => c.name === name)) {
-        categories.push({ name, icon }); saveData(); renderCategories(); closeCategoryModal();
+
+    if (!nameVal) {
+        highlightError('new-category-name');
+        return;
+    }
+
+    if (!categories.find(c => c.name === nameVal)) {
+        categories.push({ name: nameVal, icon }); saveData(); renderCategories(); closeCategoryModal();
         document.getElementById('new-category-name').value = '';
+        document.getElementById('new-category-name-count').innerText = '0';
     }
 }
 
@@ -472,8 +526,8 @@ function renderTodos() {
         return `
         <div class="todo-item ${todo.status === '已完成' ? 'completed' : ''}" data-id="${todo.id}">
             <div class="todo-main-view">
-                <input type="checkbox" ${todo.status === '已完成' ? 'checked' : ''} onchange="handleToggle('${todo.id}', this.checked)">
-                <div class="todo-content" onclick="openEditModal('${todo.id}')">
+                <input type="checkbox" class="todo-checkbox" ${todo.status === '已完成' ? 'checked' : ''}>
+                <div class="todo-content">
                     <span class="todo-title">${todo.task}</span>
                     <div class="todo-meta">
                         <span class="priority-badge priority-${pKey}">${getText(pKey)}</span>
@@ -482,15 +536,41 @@ function renderTodos() {
                     </div>
                 </div>
             </div>
-            <button class="delete-btn" onclick="openDeleteTodoConfirm(event, '${todo.id}')"><i data-lucide="trash-2" size="18"></i></button>
+            <button class="delete-btn"><i data-lucide="trash-2" size="18"></i></button>
         </div>`
     }).join('');
+
+    // Manually attach listeners to bypass delegation issues
+    list.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = btn.closest('.todo-item');
+            if (item) openDeleteTodoConfirm(e, item.dataset.id);
+        });
+    });
+    list.querySelectorAll('.todo-checkbox').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+            const item = chk.closest('.todo-item');
+            if (item) handleToggle(item.dataset.id, e.target.checked);
+        });
+    });
+    list.querySelectorAll('.todo-content').forEach(content => {
+        content.addEventListener('click', (e) => {
+            const item = content.closest('.todo-item');
+            if (item) openEditModal(item.dataset.id);
+        });
+    });
+
     if (window.lucide) lucide.createIcons();
 }
 
 function addTodo() {
-    const task = document.getElementById('new-task-input').value.trim();
-    if (!task) return;
+    const taskInput = document.getElementById('new-task-input');
+    const task = taskInput.value.trim();
+    if (!task) {
+        highlightError('new-task-input');
+        return;
+    }
     const deadline = combineDateTime(
         document.getElementById('new-task-date').value,
         document.getElementById('new-task-time').value
@@ -501,9 +581,16 @@ function addTodo() {
         status: '未完成',
         category: document.getElementById('new-task-category').value,
         deadline: deadline,
-        priority: document.getElementById('new-task-priority').value
+        priority: document.getElementById('new-task-priority').value,
+        description: document.getElementById('new-task-desc').value.trim(),
+        reminder: parseInt(document.getElementById('new-task-reminder').value),
+        reminderSent: false
     });
-    saveData(); renderTodos(); document.getElementById('new-task-input').value = '';
+    saveData(); renderTodos();
+    document.getElementById('new-task-input').value = '';
+    document.getElementById('new-task-name-count').innerText = '0';
+    document.getElementById('new-task-desc').value = '';
+    document.getElementById('new-task-desc-count').innerText = '0';
     closeAddTaskModal();
 }
 
@@ -525,6 +612,15 @@ function openDeleteTodoConfirm(e, id) {
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+function highlightError(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('input-error');
+    el.focus();
+    setTimeout(() => el.classList.remove('input-error'), 800);
+}
+
 function switchCategory(cat) {
     activeCategory = cat; renderCategories(); renderTodos();
     const title = document.getElementById('current-category-title');
@@ -535,7 +631,12 @@ function switchCategory(cat) {
     if (fab) fab.style.display = cat === 'archive' ? 'none' : 'flex';
     if (window.innerWidth <= 850) document.getElementById('sidebar').classList.remove('open');
 }
-function openAddCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; }
+function openAddCategoryModal() {
+    const el = document.getElementById('new-category-name');
+    const count = document.getElementById('new-category-name-count');
+    if (count) count.innerText = el.value.length;
+    document.getElementById('category-modal').style.display = 'flex';
+}
 function closeCategoryModal() { document.getElementById('category-modal').style.display = 'none'; }
 function openSettings() { document.getElementById('settings-theme').value = settings.theme; document.getElementById('settings-lang').value = settings.lang; document.getElementById('settings-modal').style.display = 'flex'; }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
@@ -544,11 +645,26 @@ function openEditModal(id) {
     const todo = todos.find(t => t.id === id);
     if (todo) {
         document.getElementById('edit-task-name').value = todo.task;
+        document.getElementById('edit-task-name-count').innerText = todo.task.length;
         document.getElementById('edit-task-category').value = todo.category;
         const dt = splitDateTime(todo.deadline);
         document.getElementById('edit-task-date').value = dt.date;
         document.getElementById('edit-task-time').value = dt.time;
-        document.getElementById('edit-task-priority').value = todo.priority;
+
+        // Normalize priority for backward compatibility (Chinese -> English)
+        let pKey = String(todo.priority).toLowerCase();
+        if (pKey === '高') pKey = 'high';
+        else if (pKey === '中') pKey = 'medium';
+        else if (pKey === '低') pKey = 'low';
+
+
+        document.getElementById('edit-task-priority').value = pKey;
+
+        // Populate new fields with safe defaults
+        document.getElementById('edit-task-desc').value = todo.description || '';
+        document.getElementById('edit-task-desc-count').innerText = (todo.description || '').length;
+        document.getElementById('edit-task-reminder').value = (todo.reminder !== undefined) ? todo.reminder : -1;
+
         document.getElementById('edit-modal').style.display = 'flex';
     }
 }
@@ -556,6 +672,11 @@ function closeModal() { document.getElementById('edit-modal').style.display = 'n
 document.getElementById('save-edit-btn').onclick = () => {
     const idx = todos.findIndex(t => t.id === currentEditingId);
     if (idx !== -1) {
+        const titleEl = document.getElementById('edit-task-name');
+        if (!titleEl.value.trim()) {
+            highlightError('edit-task-name');
+            return;
+        }
         const deadline = combineDateTime(
             document.getElementById('edit-task-date').value,
             document.getElementById('edit-task-time').value
@@ -565,7 +686,10 @@ document.getElementById('save-edit-btn').onclick = () => {
             task: document.getElementById('edit-task-name').value,
             category: document.getElementById('edit-task-category').value,
             deadline: deadline,
-            priority: document.getElementById('edit-task-priority').value
+            priority: document.getElementById('edit-task-priority').value,
+            description: document.getElementById('edit-task-desc').value.trim(),
+            reminder: parseInt(document.getElementById('edit-task-reminder').value),
+            reminderSent: false // Reset reminder status on edit
         };
         saveData(); renderTodos(); closeModal();
     }
@@ -735,14 +859,28 @@ function toggleTokenVisibility() {
     }
 }
 
-function saveSyncConfig(silent = false) {
-    syncConfig.type = document.getElementById('sync-type').value;
-    syncConfig.token = document.getElementById('sync-token').value.trim();
-    syncConfig.gistId = document.getElementById('sync-gist-id').value.trim();
-    syncConfig.encrypt = document.getElementById('sync-encrypt').checked;
+function saveSyncConfig(arg) {
+    // Handle overload: arg could be boolean (silent) or Event object (from click)
+    const silent = (typeof arg === 'boolean') ? arg : false;
+
+    const typeEl = document.getElementById('sync-type');
+    const tokenEl = document.getElementById('sync-token');
+    const gistIdEl = document.getElementById('sync-gist-id');
+    const encryptEl = document.getElementById('sync-encrypt');
+
+    if (typeEl) syncConfig.type = typeEl.value;
+    if (tokenEl) syncConfig.token = tokenEl.value.trim();
+    if (gistIdEl) syncConfig.gistId = gistIdEl.value.trim();
+    if (encryptEl) syncConfig.encrypt = encryptEl.checked;
+
+    // Validate Token
+    if (tokenEl && !tokenEl.value.trim()) {
+        highlightError('sync-token');
+        return;
+    }
 
     // Save to storage
-    if (isNativeApp && store) {
+    if (isNativeApp && typeof store !== 'undefined') {
         store.set('sync_config', syncConfig);
         store.save(); // Persist immediately
     } else {
@@ -751,7 +889,6 @@ function saveSyncConfig(silent = false) {
 
     if (!silent) {
         closeSyncModal();
-        // showAlert(getText('save') + ' ' + getText('syncSuccess'));
     }
 }
 
@@ -1078,3 +1215,197 @@ window.onclick = e => {
         closeGenericConfirmModal();
     }
 };
+
+
+
+/* Reminder System & Description Helpers */
+function startReminderService() {
+    if (isNativeApp && window.__TAURI__) {
+        const invoke = window.__TAURI__.core?.invoke || window.__TAURI__.invoke;
+        if (invoke) {
+            invoke('plugin:notification|request_permission').catch(err => console.error('Perm Error', err));
+        }
+    } else if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+            // Also bind to click for better browser support
+            const clickHandler = () => {
+                Notification.requestPermission();
+                document.removeEventListener('click', clickHandler);
+            };
+            document.addEventListener('click', clickHandler);
+        }
+    }
+    // Check every minute
+    setInterval(checkReminders, 60000);
+    // Initial check (delay to let data load)
+    setTimeout(checkReminders, 5000);
+}
+
+function checkReminders() {
+    // console.log('checkReminders running:', (todos || []).length);
+    if (!todos || todos.length === 0) return;
+    const now = new Date();
+    let changed = false;
+
+    todos.forEach(todo => {
+        if (todo.status === '已完成') return;
+        if (todo.reminder === undefined || todo.reminder < 0) return;
+        if (todo.reminderSent) return;
+
+        const deadlineDate = new Date(todo.deadline);
+        if (isNaN(deadlineDate.getTime())) return;
+
+        const reminderMs = todo.reminder * 60 * 1000;
+        const triggerTime = new Date(deadlineDate.getTime() - reminderMs);
+
+        // Debug log
+        // console.log(`Checking Task: "${todo.task}" | Diff: ${(now - triggerTime)/1000}s`);
+        if (now >= triggerTime) {
+            // console.log('>>> FIRING NOTIFICATION for:', todo.task);
+            sendNotification(todo);
+            todo.reminderSent = true;
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        saveData(); // Persist sent status
+    }
+}
+
+function sendNotification(todo) {
+    const title = 'Todo Reminder: ' + todo.task;
+    const timeStr = formatDeadline(todo.deadline);
+    const body = `Due: ${timeStr}\n${todo.description || ''}`;
+
+    if (isNativeApp && window.__TAURI__) {
+        const invoke = window.__TAURI__.core?.invoke || window.__TAURI__.invoke;
+        if (window.__TAURI__.notification && typeof window.__TAURI__.notification.sendNotification === 'function') {
+            try { window.__TAURI__.notification.sendNotification({ title, body }); }
+            catch (e) { console.error('Notify Error', e); }
+        } else if (invoke) {
+            invoke('plugin:notification|notify', { options: { title, body } })
+                .catch(e => console.error('Notify Invoke Error', e));
+        }
+    } else if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+            try {
+                const n = new Notification(title, { body, icon: '/icon.png' });
+                n.onclick = () => window.focus();
+            } catch (e) { console.error('Web Notify Error:', e); }
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(p => {
+                if (p === 'granted') {
+                    new Notification(title, { body, icon: '/icon.png' });
+                }
+            });
+        }
+    }
+}
+
+function setupCharCountListeners() {
+    const map = {
+        'new-task-desc': 'new-task-desc-count',
+        'edit-task-desc': 'edit-task-desc-count',
+        'new-task-input': 'new-task-name-count',
+        'edit-task-name': 'edit-task-name-count',
+        'new-category-name': 'new-category-name-count'
+    };
+    Object.keys(map).forEach(id => {
+        const el = document.getElementById(id);
+        const countId = map[id];
+        if (el) {
+            el.addEventListener('input', () => {
+                const counter = document.getElementById(countId);
+                if (counter) counter.innerText = el.value.length;
+            });
+        }
+    });
+}
+
+// Event Listeners for Release Build Compatibility
+document.getElementById('btn-add-category')?.addEventListener('click', openAddCategoryModal);
+document.getElementById('btn-settings')?.addEventListener('click', openSettings);
+document.getElementById('theme-toggle-btn')?.addEventListener('click', cycleTheme);
+document.getElementById('fab-add-btn')?.addEventListener('click', openAddTaskModal);
+// Sidebar toggles
+document.querySelectorAll('.menu-trigger').forEach(btn => {
+    btn.addEventListener('click', toggleSidebar);
+});
+
+document.getElementById('archive-menu-item')?.addEventListener('click', () => switchCategory('archive'));
+
+// Comprehensive Event Listeners for Release Build
+// Modals
+const clickMap = {
+    'btn-edit-cancel': closeModal,
+    'btn-confirm-cancel': closeConfirmModal,
+    'btn-alert-close': closeAlertModal,
+    'btn-generic-cancel': closeGenericConfirmModal,
+    'btn-cat-cancel': closeCategoryModal,
+    'btn-cat-add': addCategory,
+    'btn-add-task-cancel': closeAddTaskModal,
+    'add-task-confirm-btn': addTodo,
+    'btn-export-data': exportData,
+    'btn-open-sync': openSyncModal
+};
+
+Object.keys(clickMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', clickMap[id]);
+});
+
+// Import Trigger
+const btnImport = document.getElementById('btn-import-trigger');
+if (btnImport) btnImport.addEventListener('click', () => document.getElementById('import-file').click());
+
+// Settings Changes
+const themeSelect = document.getElementById('settings-theme');
+if (themeSelect) themeSelect.addEventListener('change', e => applyTheme(e.target.value));
+
+const langSelect = document.getElementById('settings-lang');
+if (langSelect) langSelect.addEventListener('change', e => applyLanguage(e.target.value));
+
+const syncCheck = document.getElementById('sync-enabled');
+if (syncCheck) syncCheck.addEventListener('change', toggleSyncEnabled);
+
+const importFile = document.getElementById('import-file');
+if (importFile) importFile.addEventListener('change', function () { importData(this); });
+
+
+// Sync Modal Handlers
+const syncMap = {
+    'btn-settings-close': closeSettings,
+    'btn-toggle-token': toggleTokenVisibility,
+    'btn-sync-upload': uploadToGist,
+    'btn-sync-download': downloadFromGist,
+    'btn-sync-cancel': closeSyncModal,
+    'btn-sync-save': saveSyncConfig,
+};
+Object.keys(syncMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', syncMap[id]);
+});
+
+// Final fallback error handler for debugging Release issues
+// Final fallback error handler (Silent in Production)
+window.addEventListener('error', (e) => {
+    console.error('JS Error:', e.message);
+});
+window.addEventListener('unhandledrejection', (e) => {
+    console.warn('Promise Error:', e.reason);
+});
+
+
+(function () {
+    function attach(id, fn) {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', (e) => { e.stopPropagation(); try { fn(e); } catch (err) { alert('Action Error: ' + err.message); } });
+    }
+    // Explicit Final Binding
+    attach('btn-sync-cancel', closeSyncModal);
+    attach('btn-sync-save', saveSyncConfig);
+    attach('btn-settings-close', closeSettings);
+})();
+

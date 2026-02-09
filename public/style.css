@@ -1242,3 +1242,81 @@ select option:checked {
     color: var(--text-main);
     font-weight: 500;
 }
+/* Description Textarea */
+.desc-textarea {
+    padding: 14px 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-size: 14px;
+    width: 100%;
+    resize: vertical;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.desc-textarea:focus {
+    border-color: var(--primary);
+    background-color: var(--main-bg);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+.char-count {
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-weight: 600;
+}
+
+/* Compact Modal & Grid Layout */
+.modal-content {
+    padding: 24px !important;
+    max-width: 480px !important;
+    border-radius: 20px !important;
+}
+.modal-header {
+    margin-bottom: 16px !important;
+}
+.modal-header h2 {
+    font-size: 18px !important;
+}
+.form-field {
+    margin-bottom: 14px !important;
+}
+.form-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.form-row .form-field {
+    flex: 1;
+    margin-bottom: 0 !important;
+    min-width: 0; /* Prevent overflow */
+}
+.form-field label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+}
+.form-field input,
+.form-field select,
+.desc-textarea,
+.datetime-input-group .date-input,
+.datetime-input-group .time-input {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    height: 38px;
+}
+.desc-textarea {
+    height: auto !important; /* Allow rows */
+}
+.modal-footer {
+    margin-top: 24px !important;
+}
+/* Optimize char count */
+.char-count {
+    margin-top: 2px !important;
+    font-size: 10px !important;
+}
+
